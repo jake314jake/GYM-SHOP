@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model categories {
+  category_id        Int                  @id @default(autoincrement())
+  name               String               @unique(map: "sqlite_autoindex_categories_1")
+  product_categories product_categories[]
+}
+
+model order_items {
+  order_item_id   Int             @id @default(autoincrement())
+  order_id        Int
+  detail_id       Int
+  quantity        Int
+  price           Float
+  product_details product_details @relation(fields: [detail_id], references: [detail_id], onDelete: NoAction, onUpdate: NoAction)
+  orders          orders          @relation(fields: [order_id], references: [order_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model orders {
+  order_id    Int           @id @default(autoincrement())
+  customer_id Int?
+  shop_id     Int
+  total_price Float
+  status      String?       @default("pending")
+  created_at  DateTime?     @default(now())
+  order_items order_items[]
+  shops       shops         @relation(fields: [shop_id], references: [shop_id], onDelete: NoAction, onUpdate: NoAction)
+  users       users?        @relation(fields: [customer_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model product_categories {
+  product_id  Int
+  category_id Int
+  categories  categories @relation(fields: [category_id], references: [category_id], onDelete: NoAction, onUpdate: NoAction)
+  products    products   @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([product_id, category_id])
+}
+
+model product_details {
+  detail_id    Int           @id @default(autoincrement())
+  product_id   Int
+  variant_name String?
+  extra_price  Float?        @default(0)
+  order_items  order_items[]
+  products     products      @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model products {
+  product_id         Int                  @id @default(autoincrement())
+  name               String
+  description        String?
+  base_price         Float
+  category           String?
+  created_at         DateTime?            @default(now())
+  product_categories product_categories[]
+  product_details    product_details[]
+  shop_products      shop_products[]
+}
+
+model shop_products {
+  shop_id    Int
+  product_id Int
+  price      Float
+  quantity   Int?     @default(0)
+  products   products @relation(fields: [product_id], references: [product_id], onDelete: NoAction, onUpdate: NoAction)
+  shops      shops    @relation(fields: [shop_id], references: [shop_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([shop_id, product_id])
+}
+
+model shops {
+  shop_id       Int             @id @default(autoincrement())
+  name          String
+  address       String?
+  owner_id      Int
+  created_at    DateTime?       @default(now())
+  orders        orders[]
+  shop_products shop_products[]
+  users         users           @relation(fields: [owner_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  user_id    Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique(map: "sqlite_autoindex_users_1")
+  password   String
+  phone      String?
+  role       String
+  created_at DateTime? @default(now())
+  orders     orders[]
+  shops      shops[]
+}

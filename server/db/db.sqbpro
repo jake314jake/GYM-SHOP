@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="C:/Users/LENOVO/Desktop/GYM-SHOP/db.db" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="0"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="2496"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="0"/><expanded_item id="2" parent="0"/><expanded_item id="3" parent="0"/><expanded_item id="4" parent="0"/><expanded_item id="6" parent="0"/><expanded_item id="7" parent="0"/><expanded_item id="9" parent="0"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><current_table name="4,10:maincategories"/><default_encoding codec=""/><browse_table_settings/></tab_browse><tab_sql><sql name="SQL 1">-- USERS
+CREATE TABLE users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL,
+    phone TEXT,
+    role TEXT CHECK(role IN ('admin', 'customer', 'guest', 'seller')) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- SHOPS
+CREATE TABLE shops (
+    shop_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    address TEXT,
+    owner_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES users(user_id)
+);
+
+-- PRODUCTS
+CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    base_price REAL NOT NULL,
+    category TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- SHOP_PRODUCTS (Many-to-Many with extra attributes)
+CREATE TABLE shop_products (
+    shop_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    price REAL NOT NULL, -- Shop-specific price
+    quantity INTEGER DEFAULT 0,
+    PRIMARY KEY (shop_id, product_id),
+    FOREIGN KEY (shop_id) REFERENCES shops(shop_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+-- PRODUCT DETAILS (Variants like size, flavor, extra price)
+CREATE TABLE product_details (
+    detail_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    variant_name TEXT, -- e.g., &quot;Large&quot;, &quot;Vanilla&quot;
+    extra_price REAL DEFAULT 0,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+-- ORDERS
+CREATE TABLE orders (
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    shop_id INTEGER NOT NULL,
+    total_price REAL NOT NULL,
+    status TEXT CHECK(status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled')) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES users(user_id),
+    FOREIGN KEY (shop_id) REFERENCES shops(shop_id)
+);
+
+-- ORDER ITEMS
+CREATE TABLE order_items (
+    order_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    detail_id INTEGER NOT NULL, -- Links to a specific variant
+    quantity INTEGER NOT NULL,
+    price REAL NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (detail_id) REFERENCES product_details(detail_id)
+);
+
+-- CATEGORIES (Optional)
+CREATE TABLE categories (
+    category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT UNIQUE NOT NULL
+);
+
+-- LINK PRODUCTS TO CATEGORIES
+CREATE TABLE product_categories (
+    product_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    PRIMARY KEY (product_id, category_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (category_id) REFERENCES categories(category_id)
+);
+</sql><current_tab id="0"/></tab_sql></sqlb_project>
